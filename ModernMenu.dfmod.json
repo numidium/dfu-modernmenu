@@ -1,0 +1,15 @@
+{
+    "ModTitle": "Modern Menu",
+    "ModVersion": "0.1",
+    "ModAuthor": "numidium3rd",
+    "ContactInfo": null,
+    "DFUnity_Version": "0.10.15",
+    "ModDescription": null,
+    "GUID": "a269f335-d405-40ea-a5a9-b2d53096a5cf",
+    "Files": [
+        "Assets/Game/Mods/ModernMenu/HelloWorld.cs",
+        "Assets/Game/Mods/ModernMenu/ModernMenu.dfmod.json"
+    ],
+    "Contributes": null,
+    "Dependencies": null
+}
