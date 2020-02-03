@@ -6,7 +6,7 @@ using DaggerfallConnect.Utility;
 
 namespace ModernMenu
 {
-    public class HelloWorld : MonoBehaviour
+    public class ModernMenu : MonoBehaviour
     {
         bool isVisible = false;
 
@@ -38,8 +38,8 @@ namespace ModernMenu
             Debug.Log("main init");
 
             //just an example of how to add a mono-behavior to a scene.
-            GameObject helloGo = new GameObject("hello");
-            HelloWorld hello = helloGo.AddComponent<HelloWorld>();
+            GameObject modernMenuGo = new GameObject("modernMenu");
+            ModernMenu modernMenu = modernMenuGo.AddComponent<ModernMenu>();
 
             //after finishing, set the mod's IsReady flag to true.
             ModManager.Instance.GetMod(initParams.ModTitle).IsReady = true;

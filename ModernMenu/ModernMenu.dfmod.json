@@ -1,0 +1,17 @@
+{
+    "ModTitle": "Enhanced Inventory Menu",
+    "ModVersion": "0.1",
+    "ModAuthor": "numidium3rd",
+    "ContactInfo": null,
+    "DFUnity_Version": "0.10.15",
+    "ModDescription": null,
+    "GUID": "a269f335-d405-40ea-a5a9-b2d53096a5cf",
+    "Files": [
+        "Assets/Game/Mods/ModernMenu/Scripts/ModernMenu.cs",
+        "Assets/Game/Mods/ModernMenu/Scripts/ModernMenuWindow.cs",
+        "Assets/Game/Mods/ModernMenu/ModernMenu.dfmod.json",
+        "Assets/Game/Mods/ModernMenu/Assets/Textures/Img/INVE00I0.png"
+    ],
+    "Contributes": null,
+    "Dependencies": null
+}
