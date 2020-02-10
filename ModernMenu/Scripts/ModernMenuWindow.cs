@@ -81,7 +81,6 @@ namespace ModernMenu
         #region Fields
 
         Tabs selectedTab = Tabs.All;
-        int releaseTime = 0;
 
         #endregion
 
@@ -131,29 +130,22 @@ namespace ModernMenu
         {
             base.Update();
 
-            if (releaseTime > 0)
-                releaseTime--;
-
-            if (Input.GetKeyDown(KeyCode.LeftShift))
+            if (Input.GetKey(KeyCode.LeftAlt))
             {
                 selectedActionMode = ActionModes.Info;
-                releaseTime = releaseTimeout;
             }
-            else if (Input.GetKeyDown(KeyCode.LeftControl))
+            else if (Input.GetKey(KeyCode.LeftShift))
             {
                 selectedActionMode = ActionModes.Use;
-                releaseTime = releaseTimeout;
             }
             // TODO: I really want to use right-click for this but the class doesn't currently allow it
-            else if (Input.GetKeyDown(KeyCode.LeftAlt))
-            {
-                selectedActionMode = ActionModes.Remove;
-                releaseTime = releaseTimeout;
-            }
-            else if (releaseTime == 0)
+            else if (Input.GetKey(KeyCode.LeftControl))
             {
                 selectedActionMode = ActionModes.Equip;
-                releaseTime = releaseTimeout;
+            }
+            else
+            {
+                selectedActionMode = ActionModes.Remove;
             }
         }
 
