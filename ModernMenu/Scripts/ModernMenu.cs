@@ -27,6 +27,7 @@ namespace ModernMenu
 
             // Register new inventory window
             UIWindowFactory.RegisterCustomUIWindow(UIWindowType.Inventory, typeof(ModernMenuWindow));
+            UIWindowFactory.RegisterCustomUIWindow(UIWindowType.Trade, typeof(ModernMenuTradeWindow));
 
             //after finishing, set the mod's IsReady flag to true.
             ModManager.Instance.GetMod(initParams.ModTitle).IsReady = true;

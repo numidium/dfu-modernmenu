@@ -9,6 +9,7 @@
     "Files": [
         "Assets/Game/Mods/ModernMenu/Scripts/ModernMenu.cs",
         "Assets/Game/Mods/ModernMenu/Scripts/ModernMenuWindow.cs",
+        "Assets/Game/Mods/ModernMenu/Scripts/ModernMenuTradeWindow.cs",
         "Assets/Game/Mods/ModernMenu/ModernMenu.dfmod.json",
         "Assets/Game/Mods/ModernMenu/Assets/Textures/INVE00I0.IMG.png",
 		"Assets/Game/Mods/ModernMenu/Assets/Textures/INVE01I0.IMG.png"
