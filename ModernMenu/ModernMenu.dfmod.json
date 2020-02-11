@@ -12,7 +12,9 @@
         "Assets/Game/Mods/ModernMenu/Scripts/ModernMenuTradeWindow.cs",
         "Assets/Game/Mods/ModernMenu/ModernMenu.dfmod.json",
         "Assets/Game/Mods/ModernMenu/Assets/Textures/INVE00I0.IMG.png",
-		"Assets/Game/Mods/ModernMenu/Assets/Textures/INVE01I0.IMG.png"
+		"Assets/Game/Mods/ModernMenu/Assets/Textures/INVE01I0.IMG.png",
+        "Assets/Game/Mods/ModernMenu/Assets/Textures/INVE08I0.IMG.png",
+        "Assets/Game/Mods/ModernMenu/Assets/Textures/INVE10I0.IMG.png"
     ],
     "Contributes": null,
     "Dependencies": null
