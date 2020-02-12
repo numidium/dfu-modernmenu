@@ -4,12 +4,8 @@ using DaggerfallConnect.Arena2;
 using DaggerfallConnect.Utility;
 using DaggerfallWorkshop.Utility;
 using DaggerfallWorkshop.Game.UserInterface;
-using DaggerfallWorkshop.Game.Entity;
 using DaggerfallWorkshop.Game.Items;
-using DaggerfallWorkshop.Game.Utility;
 using DaggerfallWorkshop.Game.Questing;
-using DaggerfallWorkshop.Game.Banking;
-using System.Linq;
 using DaggerfallConnect;
 using DaggerfallWorkshop.Game.Formulas;
 using DaggerfallWorkshop.Game.UserInterfaceWindows;
@@ -110,6 +106,8 @@ namespace ModernMenu
 
         #endregion
 
+        #region Unity
+
         protected override void Setup()
         {
             base.Setup();
@@ -149,6 +147,8 @@ namespace ModernMenu
                 selectedActionMode = ActionModes.Select;
             }
         }
+
+        #endregion
 
         #region Event Handlers
 
@@ -344,6 +344,8 @@ namespace ModernMenu
             }
         }
 
+        // Note from Numidium: I did NOT write this method - it's from the DFU source.
+        // It was necessary to copy and paste it because of its protection level.
         void UseItem(DaggerfallUnityItem item, ItemCollection collection = null)
         {
             const int noSpellsTextId = 12;
@@ -525,10 +527,6 @@ namespace ModernMenu
                 DaggerfallUI.MessageBox(TextManager.Instance.GetText(textDatabase, "readMapFail"));
             }
         }
-
-        #endregion
-
-        #region Event Handlers
 
         #endregion
     }
