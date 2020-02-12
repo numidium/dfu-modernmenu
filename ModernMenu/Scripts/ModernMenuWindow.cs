@@ -23,6 +23,8 @@ namespace ModernMenu
     {
         #region Enums
 
+        // Can't use enums because they crash the game
+        /*
         public enum Tabs
         {
             All,
@@ -32,6 +34,13 @@ namespace ModernMenu
             Alchemy,
             Misc
         }
+        */
+        const int All = 0;
+        const int Weapons = 1;
+        const int Armor = 2;
+        const int Clothing = 3;
+        const int Alchemy = 4;
+        const int Misc = 5;
 
         #endregion
 
@@ -80,7 +89,7 @@ namespace ModernMenu
 
         #region Fields
 
-        Tabs selectedTab = Tabs.All;
+        int selectedTab = All;
 
         #endregion
 
@@ -122,7 +131,7 @@ namespace ModernMenu
             miscButton.OnMouseClick += Misc_OnMouseClick;
 
             // Initialize
-            SelectTab(Tabs.All, false);
+            SelectTab(All, false);
             FilterLocalItems();
         }
 
@@ -153,32 +162,32 @@ namespace ModernMenu
 
         private void All_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
-            SelectTab(Tabs.All);
+            SelectTab(All);
         }
 
         private void Weapons_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
-            SelectTab(Tabs.Weapons);
+            SelectTab(Weapons);
         }
 
         private void Armor_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
-            SelectTab(Tabs.Armor);
+            SelectTab(Armor);
         }
 
         private void Clothing_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
-            SelectTab(Tabs.Clothing);
+            SelectTab(Clothing);
         }
 
         private void Alchemy_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
-            SelectTab(Tabs.Alchemy);
+            SelectTab(Alchemy);
         }
 
         private void Misc_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
-            SelectTab(Tabs.Misc);
+            SelectTab(Misc);
         }
 
         #endregion
@@ -224,8 +233,7 @@ namespace ModernMenu
                 }
             }
 
-            // Remove action buttons (info, equip, remove, use, gold)
-            componentsToRemove.Add(components[lastIndex + 1]);
+            // Remove action buttons (info, equip, remove, use)
             componentsToRemove.Add(components[lastIndex + 2]);
             componentsToRemove.Add(components[lastIndex + 3]);
             componentsToRemove.Add(components[lastIndex + 4]);
@@ -258,18 +266,18 @@ namespace ModernMenu
             miscSelected = ImageReader.GetSubTexture(goldTexture, miscRect, baseSize);
         }
 
-        protected void SelectTab(Tabs tab, bool playSound = true)
+        protected void SelectTab(int tab, bool playSound = true)
         {
             // Select new tab
             selectedTab = tab;
 
             // Set all buttons to appropriate state
-            allButton.BackgroundTexture = (tab == Tabs.All) ? allSelected : allNotSelected;
-            weaponsButton.BackgroundTexture = (tab == Tabs.Weapons) ? weaponsSelected : weaponsNotSelected;
-            armorButton.BackgroundTexture = (tab == Tabs.Armor) ? armorSelected : armorNotSelected;
-            clothingButton.BackgroundTexture = (tab == Tabs.Clothing) ? clothingSelected : clothingNotSelected;
-            alchemyButton.BackgroundTexture = (tab == Tabs.Alchemy) ? alchemySelected : alchemyNotSelected;
-            miscButton.BackgroundTexture = (tab == Tabs.Misc) ? miscSelected : miscNotSelected;
+            allButton.BackgroundTexture = (tab == All) ? allSelected : allNotSelected;
+            weaponsButton.BackgroundTexture = (tab == Weapons) ? weaponsSelected : weaponsNotSelected;
+            armorButton.BackgroundTexture = (tab == Armor) ? armorSelected : armorNotSelected;
+            clothingButton.BackgroundTexture = (tab == Clothing) ? clothingSelected : clothingNotSelected;
+            alchemyButton.BackgroundTexture = (tab == Alchemy) ? alchemySelected : alchemyNotSelected;
+            miscButton.BackgroundTexture = (tab == Misc) ? miscSelected : miscNotSelected;
 
             // Clear info panel
             if (itemInfoPanelLabel != null)
@@ -304,33 +312,33 @@ namespace ModernMenu
         protected void AddLocalItemModernMenu(DaggerfallUnityItem item)
         {
             // Add based on view
-            if (selectedTab == Tabs.All)
+            if (selectedTab == All)
             {
                 localItemsFiltered.Add(item);
             }
-            else if (selectedTab == Tabs.Weapons)
+            else if (selectedTab == Weapons)
             {
                 if (item.ItemGroup == ItemGroups.Weapons)
                     localItemsFiltered.Add(item);
             }
-            else if (selectedTab == Tabs.Armor)
+            else if (selectedTab == Armor)
             {
                 if (item.ItemGroup == ItemGroups.Armor)
                     localItemsFiltered.Add(item);
             }
-            else if (selectedTab == Tabs.Clothing)
+            else if (selectedTab == Clothing)
             {
                 if (item.ItemGroup == ItemGroups.MensClothing ||
                     item.ItemGroup == ItemGroups.WomensClothing ||
                     item.ItemGroup == ItemGroups.Jewellery)
                     localItemsFiltered.Add(item);
             }
-            else if (selectedTab == Tabs.Alchemy)
+            else if (selectedTab == Alchemy)
             {
                 if (item.IsPotion || item.IsPotionRecipe || item.IsIngredient)
                     localItemsFiltered.Add(item);
             }
-            else if (selectedTab == Tabs.Misc)
+            else if (selectedTab == Misc)
             {
                 // Anything not covered by previous categories
                 if (item.ItemGroup != ItemGroups.Weapons &&
