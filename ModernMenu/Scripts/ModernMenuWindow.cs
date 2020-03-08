@@ -93,13 +93,6 @@ namespace ModernMenu
         {
         }
 
-        public override void Refresh(bool refreshPaperDoll = true)
-        {
-            base.Refresh(refreshPaperDoll);
-
-            FilterLocalItems();
-        }
-
         #endregion
 
         #region Unity
@@ -132,8 +125,8 @@ namespace ModernMenu
             }
 
             // Initialize
-            SelectTab(All, false);
             FilterLocalItems();
+            SelectTab(All, false);
         }
 
         public override void Update()
