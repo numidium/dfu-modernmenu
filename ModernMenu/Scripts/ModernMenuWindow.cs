@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
 using DaggerfallConnect.Arena2;
 using DaggerfallConnect.Utility;
 using DaggerfallWorkshop.Utility;
 using DaggerfallWorkshop.Game.UserInterface;
 using DaggerfallWorkshop.Game.Items;
 using DaggerfallWorkshop.Game.Questing;
-using DaggerfallConnect;
-using DaggerfallWorkshop.Game.Formulas;
 using DaggerfallWorkshop.Game.UserInterfaceWindows;
 using UnityEngine;
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game;
+using System.Linq;
 
 namespace ModernMenu
 {
@@ -346,6 +343,8 @@ namespace ModernMenu
                     if (!item.IsEquipped)
                         AddLocalItemModernMenu(item);
                 }
+
+                localItemsFiltered = localItemsFiltered.OrderBy(item => GetCategoryPrecedence(item)).ThenBy(item => item.LongName).ToList();
             }
         }
 
@@ -391,32 +390,20 @@ namespace ModernMenu
             }
         }
 
-        void RecordLocationFromMap(DaggerfallUnityItem item)
+        protected int GetCategoryPrecedence(DaggerfallUnityItem item)
         {
-            const int mapTextId = 499;
-            PlayerGPS playerGPS = GameManager.Instance.PlayerGPS;
+            if (item.ItemGroup == ItemGroups.Weapons)
+                return 0;
+            else if (item.ItemGroup == ItemGroups.Armor)
+                return 1;
+            else if (item.ItemGroup == ItemGroups.MensClothing ||
+                item.ItemGroup == ItemGroups.WomensClothing ||
+                item.ItemGroup == ItemGroups.Jewellery)
+                return 2;
+            else if (item.IsPotion || item.IsPotionRecipe || item.IsIngredient)
+                return 3;
 
-            try
-            {
-                DFLocation revealedLocation = playerGPS.DiscoverRandomLocation();
-
-                if (string.IsNullOrEmpty(revealedLocation.Name))
-                    throw new Exception();
-
-                playerGPS.LocationRevealedByMapItem = revealedLocation.Name;
-                GameManager.Instance.PlayerEntity.Notebook.AddNote(
-                    TextManager.Instance.GetText(textDatabase, "readMap").Replace("%map", revealedLocation.Name));
-
-                DaggerfallMessageBox mapText = new DaggerfallMessageBox(uiManager, this);
-                mapText.SetTextTokens(DaggerfallUnity.Instance.TextProvider.GetRandomTokens(mapTextId));
-                mapText.ClickAnywhereToClose = true;
-                mapText.Show();
-            }
-            catch (Exception)
-            {
-                // Player has already descovered all valid locations in this region!
-                DaggerfallUI.MessageBox(TextManager.Instance.GetText(textDatabase, "readMapFail"));
-            }
+            return 4;
         }
 
         #endregion
