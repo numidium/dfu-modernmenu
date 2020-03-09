@@ -128,7 +128,7 @@ namespace ModernMenu
         {
             base.Update();
 
-            if (Input.GetKey(KeyCode.LeftAlt))
+            if (Input.GetKey(KeyCode.LeftControl))
             {
                 selectedActionMode = ActionModes.Info;
             }
@@ -142,32 +142,32 @@ namespace ModernMenu
 
         #region Event Handlers
 
-        private void All_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        protected void All_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
             SelectTab(All);
         }
 
-        private void Weapons_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        protected void Weapons_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
             SelectTab(Weapons);
         }
 
-        private void Armor_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        protected void Armor_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
             SelectTab(Armor);
         }
 
-        private void Clothing_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        protected void Clothing_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
             SelectTab(Clothing);
         }
 
-        private void Alchemy_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        protected void Alchemy_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
             SelectTab(Alchemy);
         }
 
-        private void Misc_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        protected void Misc_OnMouseClick(BaseScreenComponent sender, Vector2 position)
         {
             SelectTab(Misc);
         }

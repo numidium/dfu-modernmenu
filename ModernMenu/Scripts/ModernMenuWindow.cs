@@ -54,8 +54,8 @@ namespace ModernMenu
         Rect clothingRect = new Rect(160, 0, 53, 10);
         Rect alchemyRect = new Rect(213, 0, 53, 10);
         Rect miscRect = new Rect(266, 0, 53, 10);
-        Rect rHandAttackRect = new Rect(223, 20, 37, 30);
-        Rect lHandAttackRect = new Rect(223, 65, 37, 30);
+        Rect rHandAttackRect = new Rect(225, 20, 37, 30);
+        Rect lHandAttackRect = new Rect(225, 65, 37, 30);
 
         Panel rHandAttackPanel;
         Panel lHandAttackPanel;
@@ -145,8 +145,6 @@ namespace ModernMenu
             lHandAttackPanel.Components.Add(lHandAttackLabel);
             SetAttackInfo(rHandAttackLabel);
             SetAttackInfo(lHandAttackLabel, false);
-            //rHandAttackLabel.SetText(new TextAsset("Right\nAtk:\n+50\nDmg:\n10-24"));
-            //lHandAttackLabel.SetText(new TextAsset("Left\nAtk:\n+50\nDmg:\n10-24"));
 
             // Initialize
             FilterLocalItems();
@@ -258,6 +256,7 @@ namespace ModernMenu
                 theftBasket.AddItem(item);
         }
 
+
         protected override void RemoteItemListScroller_OnItemRightClick(DaggerfallUnityItem item)
         {
             // Send click to quest system
@@ -272,12 +271,31 @@ namespace ModernMenu
                 }
             }
 
-            // Use or get info about remote item
+            // Info
             if (selectedActionMode == ActionModes.Info)
                 ShowInfoPopup(item);
-            else if (!item.UseItem(remoteItems))
-                UseItem(item, remoteItems);
-            Refresh(false);
+            // Use light source or book/parchment
+            else if (item.IsLightSource || item.IsParchment || item.IsPotionRecipe || item.ItemGroup == ItemGroups.Books)
+            {
+                UseItem(item);
+                Refresh(false);
+            }
+            // Use potion
+            else if (item.IsPotion)
+            {
+                if (!item.UseItem(remoteItems))
+                    UseItem(item, remoteItems);
+                Refresh(false);
+            }
+            // Equip apparel/weapon
+            else
+            {
+                // Transfer to local items
+                if (localItems != null)
+                    TransferItem(item, remoteItems, localItems, CanCarryAmount(item), equip: true);
+                if (theftBasket != null && lootTarget != null && lootTarget.houseOwned)
+                    theftBasket.AddItem(item);
+            }
         }
 
         protected void AccessoryItemsButton_OnMouseRightClick(BaseScreenComponent sender, Vector2 position)
@@ -455,12 +473,10 @@ namespace ModernMenu
 
         protected void SetAttackInfo(MultiFormatTextLabel label, bool rightHand = true)
         {
-            var playerEntity = GameManager.Instance.PlayerEntity;
             var weapon = playerEntity.ItemEquipTable.GetItem(rightHand ? EquipSlots.RightHand : EquipSlots.LeftHand);
+            short weaponSkill = 0;
             int chanceToHitMod = 0;
             int damageMod = 0;
-            int skillValue = 0;
-            short weaponSkill = 0;
             int minDamage = 0;
             int maxDamage = 0;
 
@@ -468,42 +484,43 @@ namespace ModernMenu
             if (weapon != null)
             {
                 weaponSkill = weapon.GetWeaponSkillIDAsShort();
-                skillValue = PlayerEntity.Skills.GetLiveSkillValue(weaponSkill);
+                short skillValue = PlayerEntity.Skills.GetLiveSkillValue(weaponSkill);
                 chanceToHitMod = skillValue;
 
                 // Apply weapon proficiency
                 if (((int)playerEntity.Career.ExpertProficiencies & weapon.GetWeaponSkillUsed()) != 0)
                 {
-                    damageMod += ((playerEntity.Level / 3) + 1);
+                    damageMod += (playerEntity.Level / 3) + 1;
                     chanceToHitMod += playerEntity.Level;
                 }
 
                 // Apply weapon material modifier
                 if (weapon.GetWeaponMaterialModifier() > 0)
                 {
-                    chanceToHitMod += (weapon.GetWeaponMaterialModifier() * 10);
+                    chanceToHitMod += weapon.GetWeaponMaterialModifier() * 10;
                 }
 
                 // Apply racial bonuses
                 if (playerEntity.RaceTemplate.ID == (int)Races.DarkElf)
                 {
-                    damageMod += (playerEntity.Level / 4);
-                    chanceToHitMod += (playerEntity.Level / 4);
+                    damageMod += playerEntity.Level / 4;
+                    chanceToHitMod += playerEntity.Level / 4;
                 }
                 else if (weaponSkill == (short)DFCareer.Skills.Archery)
                 {
                     if (playerEntity.RaceTemplate.ID == (int)Races.WoodElf)
                     {
-                        damageMod += (playerEntity.Level / 3);
-                        chanceToHitMod += (playerEntity.Level / 3);
+                        damageMod += playerEntity.Level / 3;
+                        chanceToHitMod += playerEntity.Level / 3;
                     }
                 }
                 else if (playerEntity.RaceTemplate.ID == (int)Races.Redguard)
                 {
-                    damageMod += (playerEntity.Level / 3);
-                    chanceToHitMod += (playerEntity.Level / 3);
+                    damageMod += playerEntity.Level / 3;
+                    chanceToHitMod += playerEntity.Level / 3;
                 }
 
+                // Calculate min and max damage player can do with their current weapon
                 damageMod += weapon.GetWeaponMaterialModifier() + FormulaHelper.DamageModifier(playerEntity.Stats.LiveStrength);
                 minDamage = weapon.GetBaseDamageMin() + damageMod;
                 maxDamage = weapon.GetBaseDamageMax() + damageMod;
@@ -513,9 +530,9 @@ namespace ModernMenu
             {
                 var handToHandSkill = playerEntity.Skills.GetLiveSkillValue((short)DFCareer.Skills.HandToHand);
                 chanceToHitMod += handToHandSkill;
-                if (((int)playerEntity.Career.ExpertProficiencies & (int)(DFCareer.ProficiencyFlags.HandToHand)) != 0)
+                if (((int)playerEntity.Career.ExpertProficiencies & (int)DFCareer.ProficiencyFlags.HandToHand) != 0)
                 {
-                    damageMod += ((playerEntity.Level / 3) + 1);
+                    damageMod += (playerEntity.Level / 3) + 1;
                     chanceToHitMod += playerEntity.Level;
                 }
 
@@ -524,8 +541,8 @@ namespace ModernMenu
             }
 
             label.Clear();
-            var handTxt = rightHand ? "Right" : "Left";
-            label.SetText(new TextAsset(handTxt + "\nAtk:\n" + chanceToHitMod.ToString() + "\nDmg:\n" + minDamage.ToString() + "-" + maxDamage.ToString()));
+            var handText = rightHand ? "Right" : "Left";
+            label.SetText(new TextAsset(handText + "\nAtk:\n" + chanceToHitMod.ToString() + "\nDmg:\n" + minDamage.ToString() + "-" + maxDamage.ToString()));
         }
 
         #endregion
