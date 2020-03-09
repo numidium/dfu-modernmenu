@@ -9,6 +9,9 @@ using UnityEngine;
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game;
 using System.Linq;
+using DaggerfallWorkshop.Game.Entity;
+using DaggerfallConnect;
+using DaggerfallWorkshop.Game.Formulas;
 
 namespace ModernMenu
 {
@@ -51,6 +54,14 @@ namespace ModernMenu
         Rect clothingRect = new Rect(160, 0, 53, 10);
         Rect alchemyRect = new Rect(213, 0, 53, 10);
         Rect miscRect = new Rect(266, 0, 53, 10);
+        Rect rHandAttackRect = new Rect(223, 20, 37, 30);
+        Rect lHandAttackRect = new Rect(223, 65, 37, 30);
+
+        Panel rHandAttackPanel;
+        Panel lHandAttackPanel;
+
+        MultiFormatTextLabel rHandAttackLabel;
+        MultiFormatTextLabel lHandAttackLabel;
 
         // Tab Buttons
         Button allButton;
@@ -124,6 +135,19 @@ namespace ModernMenu
                 button.OnRightMouseClick += AccessoryItemsButton_OnMouseRightClick;
             }
 
+            // Attack bonus indicators
+            rHandAttackPanel = DaggerfallUI.AddPanel(rHandAttackRect, NativePanel);
+            lHandAttackPanel = DaggerfallUI.AddPanel(lHandAttackRect, NativePanel);
+
+            rHandAttackLabel = GetAttackInfoLabel();
+            lHandAttackLabel = GetAttackInfoLabel();
+            rHandAttackPanel.Components.Add(rHandAttackLabel);
+            lHandAttackPanel.Components.Add(lHandAttackLabel);
+            SetAttackInfo(rHandAttackLabel);
+            SetAttackInfo(lHandAttackLabel, false);
+            //rHandAttackLabel.SetText(new TextAsset("Right\nAtk:\n+50\nDmg:\n10-24"));
+            //lHandAttackLabel.SetText(new TextAsset("Left\nAtk:\n+50\nDmg:\n10-24"));
+
             // Initialize
             FilterLocalItems();
             SelectTab(All, false);
@@ -141,6 +165,16 @@ namespace ModernMenu
             else
             {
                 selectedActionMode = ActionModes.Equip;
+            }
+        }
+
+        public override void Refresh(bool refreshPaperDoll = true)
+        {
+            base.Refresh(refreshPaperDoll);
+            if (IsSetup)
+            {
+                SetAttackInfo(rHandAttackLabel);
+                SetAttackInfo(lHandAttackLabel, false);
             }
         }
 
@@ -198,7 +232,7 @@ namespace ModernMenu
             if (selectedActionMode == ActionModes.Info)
                 ShowInfoPopup(item);
             // Use light source or book/parchment
-            else if (item.IsLightSource || item.IsParchment || item.ItemGroup == ItemGroups.Books)
+            else if (item.IsLightSource || item.IsParchment || item.IsPotionRecipe || item.ItemGroup == ItemGroups.Books)
             {
                 UseItem(item);
                 Refresh(false);
@@ -212,7 +246,9 @@ namespace ModernMenu
             }
             // Equip apparel/weapon
             else
+            {
                 EquipItem(item);
+            }
         }
 
         protected override void RemoteItemListScroller_OnItemClick(DaggerfallUnityItem item)
@@ -397,6 +433,99 @@ namespace ModernMenu
                 return 3;
 
             return 4;
+        }
+
+        protected MultiFormatTextLabel GetAttackInfoLabel()
+        {
+            return new MultiFormatTextLabel
+            {
+                Position = new Vector2(2, 0),
+                VerticalAlignment = VerticalAlignment.Middle,
+                MinTextureDimTextLabel = 16, // important to prevent scaling issues for single text lines
+                TextScale = .7f,
+                MaxTextWidth = 37,
+                WrapText = true,
+                WrapWords = true,
+                ExtraLeading = 3, // spacing between info panel elements
+                TextColor = new Color32(250, 250, 0, 255),
+                ShadowPosition = new Vector2(0.5f, 0.5f),
+                ShadowColor = DaggerfallUI.DaggerfallAlternateShadowColor1
+            };
+        }
+
+        protected void SetAttackInfo(MultiFormatTextLabel label, bool rightHand = true)
+        {
+            var playerEntity = GameManager.Instance.PlayerEntity;
+            var weapon = playerEntity.ItemEquipTable.GetItem(rightHand ? EquipSlots.RightHand : EquipSlots.LeftHand);
+            int chanceToHitMod = 0;
+            int damageMod = 0;
+            int skillValue = 0;
+            short weaponSkill = 0;
+            int minDamage = 0;
+            int maxDamage = 0;
+
+            // Note from Numidium: I copied snippets from FormulaHelper.cs to calculate the values used here
+            if (weapon != null)
+            {
+                weaponSkill = weapon.GetWeaponSkillIDAsShort();
+                skillValue = PlayerEntity.Skills.GetLiveSkillValue(weaponSkill);
+                chanceToHitMod = skillValue;
+
+                // Apply weapon proficiency
+                if (((int)playerEntity.Career.ExpertProficiencies & weapon.GetWeaponSkillUsed()) != 0)
+                {
+                    damageMod += ((playerEntity.Level / 3) + 1);
+                    chanceToHitMod += playerEntity.Level;
+                }
+
+                // Apply weapon material modifier
+                if (weapon.GetWeaponMaterialModifier() > 0)
+                {
+                    chanceToHitMod += (weapon.GetWeaponMaterialModifier() * 10);
+                }
+
+                // Apply racial bonuses
+                if (playerEntity.RaceTemplate.ID == (int)Races.DarkElf)
+                {
+                    damageMod += (playerEntity.Level / 4);
+                    chanceToHitMod += (playerEntity.Level / 4);
+                }
+                else if (weaponSkill == (short)DFCareer.Skills.Archery)
+                {
+                    if (playerEntity.RaceTemplate.ID == (int)Races.WoodElf)
+                    {
+                        damageMod += (playerEntity.Level / 3);
+                        chanceToHitMod += (playerEntity.Level / 3);
+                    }
+                }
+                else if (playerEntity.RaceTemplate.ID == (int)Races.Redguard)
+                {
+                    damageMod += (playerEntity.Level / 3);
+                    chanceToHitMod += (playerEntity.Level / 3);
+                }
+
+                damageMod += weapon.GetWeaponMaterialModifier() + FormulaHelper.DamageModifier(playerEntity.Stats.LiveStrength);
+                minDamage = weapon.GetBaseDamageMin() + damageMod;
+                maxDamage = weapon.GetBaseDamageMax() + damageMod;
+            }
+            // Apply hand-to-hand proficiency. Hand-to-hand proficiency is not applied in classic.
+            else 
+            {
+                var handToHandSkill = playerEntity.Skills.GetLiveSkillValue((short)DFCareer.Skills.HandToHand);
+                chanceToHitMod += handToHandSkill;
+                if (((int)playerEntity.Career.ExpertProficiencies & (int)(DFCareer.ProficiencyFlags.HandToHand)) != 0)
+                {
+                    damageMod += ((playerEntity.Level / 3) + 1);
+                    chanceToHitMod += playerEntity.Level;
+                }
+
+                minDamage = FormulaHelper.CalculateHandToHandMinDamage(handToHandSkill);
+                maxDamage = FormulaHelper.CalculateHandToHandMaxDamage(handToHandSkill);
+            }
+
+            label.Clear();
+            var handTxt = rightHand ? "Right" : "Left";
+            label.SetText(new TextAsset(handTxt + "\nAtk:\n" + chanceToHitMod.ToString() + "\nDmg:\n" + minDamage.ToString() + "-" + maxDamage.ToString()));
         }
 
         #endregion

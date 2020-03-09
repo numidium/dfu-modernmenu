@@ -1,18 +1,15 @@
-using System;
 using System.Collections.Generic;
 using DaggerfallConnect.Arena2;
 using DaggerfallConnect.Utility;
 using DaggerfallWorkshop.Utility;
 using DaggerfallWorkshop.Game.UserInterface;
 using DaggerfallWorkshop.Game.Items;
-using DaggerfallWorkshop.Game.Questing;
-using DaggerfallConnect;
-using DaggerfallWorkshop.Game.Formulas;
 using DaggerfallWorkshop.Game.UserInterfaceWindows;
 using UnityEngine;
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game;
 using DaggerfallWorkshop.Game.Guilds;
+using System.Linq;
 
 namespace ModernMenu
 {
@@ -97,13 +94,6 @@ namespace ModernMenu
         {
         }
 
-        public override void Refresh(bool refreshPaperDoll = true)
-        {
-            base.Refresh(refreshPaperDoll);
-
-            FilterLocalItems();
-        }
-
         #endregion
 
         #region Unity
@@ -130,8 +120,8 @@ namespace ModernMenu
             miscButton.OnMouseClick += Misc_OnMouseClick;
 
             // Initialize
-            SelectTab(All, false);
             FilterLocalItems();
+            SelectTab(All, false);
         }
 
         public override void Update()
@@ -299,6 +289,8 @@ namespace ModernMenu
                     if (!item.IsEquipped)
                         AddLocalItemModernMenu(item);
                 }
+
+                localItemsFiltered = localItemsFiltered.OrderBy(item => GetCategoryPrecedence(item)).ThenBy(item => item.LongName).ToList();
             }
         }
 
@@ -344,188 +336,20 @@ namespace ModernMenu
             }
         }
 
-        // Note from Numidium: I did NOT write this method - it's from the DFU source.
-        // It was necessary to copy and paste it because of its protection level.
-        void UseItem(DaggerfallUnityItem item, ItemCollection collection = null)
+        protected int GetCategoryPrecedence(DaggerfallUnityItem item)
         {
-            const int noSpellsTextId = 12;
+            if (item.ItemGroup == ItemGroups.Weapons)
+                return 0;
+            else if (item.ItemGroup == ItemGroups.Armor)
+                return 1;
+            else if (item.ItemGroup == ItemGroups.MensClothing ||
+                item.ItemGroup == ItemGroups.WomensClothing ||
+                item.ItemGroup == ItemGroups.Jewellery)
+                return 2;
+            else if (item.IsPotion || item.IsPotionRecipe || item.IsIngredient)
+                return 3;
 
-            // Handle quest items on use clicks
-            if (item.IsQuestItem)
-            {
-                // Get the quest this item belongs to
-                Quest quest = QuestMachine.Instance.GetQuest(item.QuestUID);
-                if (quest == null)
-                    throw new Exception("DaggerfallUnityItem references a quest that could not be found.");
-
-                // Get the Item resource from quest
-                Item questItem = quest.GetItem(item.QuestItemSymbol);
-
-                // Use quest item
-                if (!questItem.UseClicked && questItem.ActionWatching)
-                {
-                    questItem.UseClicked = true;
-
-                    // Non-parchment items pop back to HUD so quest system has first shot at a custom click action in game world
-                    // This is usually the case when actioning most quest items (e.g. a painting, bell, holy item, etc.)
-                    // But when clicking a parchment item this behaviour is usually incorrect (e.g. a letter to read)
-                    if (!questItem.DaggerfallUnityItem.IsParchment)
-                    {
-                        DaggerfallUI.Instance.PopToHUD();
-                        return;
-                    }
-                }
-
-                // Check for an on use value
-                if (questItem.UsedMessageID != 0)
-                {
-                    // Display the message popup
-                    quest.ShowMessagePopup(questItem.UsedMessageID, true);
-                }
-            }
-
-            // Try to handle use with a registered delegate
-            ItemHelper.ItemUseHander itemUseHander;
-            if (DaggerfallUnity.Instance.ItemHelper.GetItemUseHander(item.TemplateIndex, out itemUseHander))
-            {
-                if (itemUseHander(item, collection))
-                    return;
-            }
-
-            // Handle normal items
-            if (item.ItemGroup == ItemGroups.Books && !item.IsArtifact)
-            {
-                DaggerfallUI.Instance.BookReaderWindow.OpenBook(item);
-                if (DaggerfallUI.Instance.BookReaderWindow.IsBookOpen)
-                {
-                    DaggerfallUI.PostMessage(DaggerfallUIMessages.dfuiOpenBookReaderWindow);
-                }
-                else
-                {
-                    var messageBox = new DaggerfallMessageBox(uiManager, this);
-                    messageBox.SetText(TextManager.Instance.GetText(textDatabase, "bookUnavailable"));
-                    messageBox.ClickAnywhereToClose = true;
-                    uiManager.PushWindow(messageBox);
-                }
-            }
-            else if (item.IsPotion)
-            {   // Handle drinking magic potions
-                GameManager.Instance.PlayerEffectManager.DrinkPotion(item);
-                collection.RemoveOne(item);
-            }
-            else if (item.IsPotionRecipe)
-            {
-                // TODO: There may be other objects that result in this dialog box, but for now I'm sure this one says it.
-                // -IC122016
-                DaggerfallMessageBox cannotUse = new DaggerfallMessageBox(uiManager, this);
-                cannotUse.SetText(TextManager.Instance.GetText(textDatabase, "cannotUseThis"));
-                cannotUse.ClickAnywhereToClose = true;
-                cannotUse.Show();
-            }
-            else if ((item.IsOfTemplate(ItemGroups.MiscItems, (int)MiscItems.Map) ||
-                      item.IsOfTemplate(ItemGroups.Maps, (int)Maps.Map)) && collection != null)
-            {   // Handle map items
-                RecordLocationFromMap(item);
-                collection.RemoveItem(item);
-                Refresh(false);
-            }
-            else if (item.TemplateIndex == (int)MiscItems.Spellbook)
-            {
-                if (GameManager.Instance.PlayerEntity.SpellbookCount() == 0)
-                {
-                    // Player has no spells
-                    TextFile.Token[] textTokens = DaggerfallUnity.Instance.TextProvider.GetRSCTokens(noSpellsTextId);
-                    DaggerfallMessageBox noSpells = new DaggerfallMessageBox(uiManager, this);
-                    noSpells.SetTextTokens(textTokens);
-                    noSpells.ClickAnywhereToClose = true;
-                    noSpells.Show();
-                }
-                else
-                {
-                    // Show spellbook
-                    DaggerfallUI.UIManager.PostMessage(DaggerfallUIMessages.dfuiOpenSpellBookWindow);
-                }
-            }
-            else if (item.ItemGroup == ItemGroups.Drugs && collection != null)
-            {
-                // Drug poison IDs are 136 through 139. Template indexes are 78 through 81, so add to that.
-                FormulaHelper.InflictPoison(GameManager.Instance.PlayerEntity, (Poisons)item.TemplateIndex + 66, true);
-                collection.RemoveItem(item);
-            }
-            else if (item.IsLightSource)
-            {
-                if (item.currentCondition > 0)
-                {
-                    if (GameManager.Instance.PlayerEntity.LightSource == item)
-                    {
-                        DaggerfallUI.MessageBox(TextManager.Instance.GetText(textDatabase, "lightDouse"), false, item);
-                        GameManager.Instance.PlayerEntity.LightSource = null;
-                    }
-                    else
-                    {
-                        DaggerfallUI.MessageBox(TextManager.Instance.GetText(textDatabase, "lightLight"), false, item);
-                        GameManager.Instance.PlayerEntity.LightSource = item;
-                    }
-                }
-                else
-                    DaggerfallUI.MessageBox(TextManager.Instance.GetText(textDatabase, "lightEmpty"), false, item);
-            }
-            else if (item.ItemGroup == ItemGroups.UselessItems2 && item.TemplateIndex == (int)UselessItems2.Oil && collection != null)
-            {
-                DaggerfallUnityItem lantern = localItems.GetItem(ItemGroups.UselessItems2, (int)UselessItems2.Lantern);
-                if (lantern != null && lantern.currentCondition <= lantern.maxCondition - item.currentCondition)
-                {   // Re-fuel lantern with the oil.
-                    lantern.currentCondition += item.currentCondition;
-                    collection.RemoveItem(item.IsAStack() ? collection.SplitStack(item, 1) : item);
-                    DaggerfallUI.MessageBox(TextManager.Instance.GetText(textDatabase, "lightRefuel"), false, lantern);
-                    Refresh(false);
-                }
-                else
-                    DaggerfallUI.MessageBox(TextManager.Instance.GetText(textDatabase, "lightFull"), false, lantern);
-            }
-            else
-            {
-                NextVariant(item);
-            }
-
-            // Handle enchanted item on use clicks - setup spell and pop back to HUD
-            // Classic does not close inventory window like this, but this way feels better to me
-            // Will see what feedback is like and revert to classic behaviour if widely preferred
-            if (item.IsEnchanted)
-            {
-                // Close the inventory window first. Some artifacts (Azura's Star, the Oghma Infinium) create windows on use and we don't want to close those.
-                CloseWindow();
-                GameManager.Instance.PlayerEffectManager.DoItemEnchantmentPayloads(DaggerfallWorkshop.Game.MagicAndEffects.EnchantmentPayloadFlags.Used, item, collection);
-                return;
-            }
-        }
-
-        void RecordLocationFromMap(DaggerfallUnityItem item)
-        {
-            const int mapTextId = 499;
-            PlayerGPS playerGPS = GameManager.Instance.PlayerGPS;
-
-            try
-            {
-                DFLocation revealedLocation = playerGPS.DiscoverRandomLocation();
-
-                if (string.IsNullOrEmpty(revealedLocation.Name))
-                    throw new Exception();
-
-                playerGPS.LocationRevealedByMapItem = revealedLocation.Name;
-                GameManager.Instance.PlayerEntity.Notebook.AddNote(
-                    TextManager.Instance.GetText(textDatabase, "readMap").Replace("%map", revealedLocation.Name));
-
-                DaggerfallMessageBox mapText = new DaggerfallMessageBox(uiManager, this);
-                mapText.SetTextTokens(DaggerfallUnity.Instance.TextProvider.GetRandomTokens(mapTextId));
-                mapText.ClickAnywhereToClose = true;
-                mapText.Show();
-            }
-            catch (Exception)
-            {
-                // Player has already descovered all valid locations in this region!
-                DaggerfallUI.MessageBox(TextManager.Instance.GetText(textDatabase, "readMapFail"));
-            }
+            return 4;
         }
 
         #endregion
