@@ -226,39 +226,23 @@ namespace ModernMenu
 
         protected override void LocalItemListScroller_OnItemRightClick(DaggerfallUnityItem item)
         {
-            // Info
-            if (selectedActionMode == ActionModes.Info)
-                ShowInfoPopup(item);
-            // Use unequippable items
-            else if (item.IsLightSource || item.IsParchment || item.IsIngredient || item.IsPotion || item.ItemGroup == ItemGroups.Books ||
-                    (item.ItemGroup != ItemGroups.Weapons &&
-                        item.ItemGroup != ItemGroups.Armor &&
-                        item.ItemGroup != ItemGroups.MensClothing &&
-                        item.ItemGroup != ItemGroups.WomensClothing &&
-                        item.ItemGroup != ItemGroups.Jewellery &&
-                        !item.IsPotion && !item.IsPotionRecipe && !item.IsIngredient))
-            {
-                if (!item.UseItem(localItems))
-                    UseItem(item, localItems);
-                Refresh(false);
-            }
-            // Display recipe in a message box
-            else if (item.IsPotionRecipe)
-            {
-                DaggerfallMessageBox messageBoxRecipe = new DaggerfallMessageBox(uiManager, this);
-                messageBoxRecipe.SetTextTokens(item.GetMacroDataSource().PotionRecipeIngredients(TextFile.Formatting.JustifyCenter));
-                messageBoxRecipe.ClickAnywhereToClose = true;
-                messageBoxRecipe.Show();
-            }
-            // Equip apparel/weapon
-            else
-            {
-                EquipItem(item);
-            }
+            HandleItemRightClick(item);
         }
 
         protected override void RemoteItemListScroller_OnItemClick(DaggerfallUnityItem item)
         {
+            // Send click to quest system
+            if (item.IsQuestItem)
+            {
+                Quest quest = QuestMachine.Instance.GetQuest(item.QuestUID);
+                if (quest != null)
+                {
+                    Item questItem = quest.GetItem(item.QuestItemSymbol);
+                    if (quest != null)
+                        questItem.SetPlayerClicked();
+                }
+            }
+
             TransferItem(item, remoteItems, localItems, CanCarryAmount(item));
             if (theftBasket != null && lootTarget != null && lootTarget.houseOwned)
                 theftBasket.AddItem(item);
@@ -279,39 +263,7 @@ namespace ModernMenu
                 }
             }
 
-            // Info
-            if (selectedActionMode == ActionModes.Info)
-                ShowInfoPopup(item);
-            // Use unequippable items
-            else if (item.IsLightSource || item.IsParchment || item.IsIngredient || item.IsPotion || item.ItemGroup == ItemGroups.Books ||
-                    (item.ItemGroup != ItemGroups.Weapons &&
-                        item.ItemGroup != ItemGroups.Armor &&
-                        item.ItemGroup != ItemGroups.MensClothing &&
-                        item.ItemGroup != ItemGroups.WomensClothing &&
-                        item.ItemGroup != ItemGroups.Jewellery &&
-                        !item.IsPotion && !item.IsPotionRecipe && !item.IsIngredient))
-            {
-                if (!item.UseItem(remoteItems))
-                    UseItem(item, remoteItems);
-                Refresh(false);
-            }
-            // Display recipe in a message box
-            else if (item.IsPotionRecipe)
-            {
-                DaggerfallMessageBox messageBoxRecipe = new DaggerfallMessageBox(uiManager, this);
-                messageBoxRecipe.SetTextTokens(item.GetMacroDataSource().PotionRecipeIngredients(TextFile.Formatting.JustifyCenter));
-                messageBoxRecipe.ClickAnywhereToClose = true;
-                messageBoxRecipe.Show();
-            }
-            // Equip apparel/weapon
-            else
-            {
-                // Transfer to local items
-                if (localItems != null)
-                    TransferItem(item, remoteItems, localItems, CanCarryAmount(item), equip: true);
-                if (theftBasket != null && lootTarget != null && lootTarget.houseOwned)
-                    theftBasket.AddItem(item);
-            }
+            HandleItemRightClick(item, true);
         }
 
         protected void AccessoryItemsButton_OnMouseRightClick(BaseScreenComponent sender, Vector2 position)
@@ -560,6 +512,48 @@ namespace ModernMenu
             label.Clear();
             var handText = rightHand ? "Right" : "Left";
             label.SetText(new TextAsset(handText + "\nAtk:\n" + chanceToHitMod.ToString() + "\nDmg:\n" + minDamage.ToString() + "-" + maxDamage.ToString()));
+        }
+
+        protected void HandleItemRightClick(DaggerfallUnityItem item, bool remote = false)
+        {
+            // Info
+            if (selectedActionMode == ActionModes.Info)
+                ShowInfoPopup(item);
+            // Use unequippable items
+            else if (item.IsLightSource || item.IsParchment || item.IsIngredient || item.IsPotion || item.ItemGroup == ItemGroups.Books ||
+                    (item.ItemGroup != ItemGroups.Weapons &&
+                        item.ItemGroup != ItemGroups.Armor &&
+                        item.ItemGroup != ItemGroups.MensClothing &&
+                        item.ItemGroup != ItemGroups.WomensClothing &&
+                        item.ItemGroup != ItemGroups.Jewellery &&
+                        !item.IsPotion && !item.IsPotionRecipe && !item.IsIngredient))
+            {
+                if (!item.UseItem(localItems))
+                    UseItem(item, localItems);
+                Refresh(false);
+            }
+            // Display recipe in a message box
+            else if (item.IsPotionRecipe)
+            {
+                DaggerfallMessageBox messageBoxRecipe = new DaggerfallMessageBox(uiManager, this);
+                messageBoxRecipe.SetTextTokens(item.GetMacroDataSource().PotionRecipeIngredients(TextFile.Formatting.JustifyCenter));
+                messageBoxRecipe.ClickAnywhereToClose = true;
+                messageBoxRecipe.Show();
+            }
+            // Equip apparel/weapon
+            else
+            {
+                if (remote)
+                {
+                    // Transfer to local items
+                    if (localItems != null)
+                        TransferItem(item, remoteItems, localItems, CanCarryAmount(item), equip: true);
+                    if (theftBasket != null && lootTarget != null && lootTarget.houseOwned)
+                        theftBasket.AddItem(item);
+                }
+                else
+                    EquipItem(item);
+            }
         }
 
         #endregion
