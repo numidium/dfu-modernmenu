@@ -229,18 +229,26 @@ namespace ModernMenu
             // Info
             if (selectedActionMode == ActionModes.Info)
                 ShowInfoPopup(item);
-            // Use light source or book/parchment
-            else if (item.IsLightSource || item.IsParchment || item.IsPotionRecipe || item.ItemGroup == ItemGroups.Books)
-            {
-                UseItem(item);
-                Refresh(false);
-            }
-            // Use potion
-            else if (item.IsPotion)
+            // Use unequippable items
+            else if (item.IsLightSource || item.IsParchment || item.IsIngredient || item.IsPotion || item.ItemGroup == ItemGroups.Books ||
+                    (item.ItemGroup != ItemGroups.Weapons &&
+                        item.ItemGroup != ItemGroups.Armor &&
+                        item.ItemGroup != ItemGroups.MensClothing &&
+                        item.ItemGroup != ItemGroups.WomensClothing &&
+                        item.ItemGroup != ItemGroups.Jewellery &&
+                        !item.IsPotion && !item.IsPotionRecipe && !item.IsIngredient))
             {
                 if (!item.UseItem(localItems))
                     UseItem(item, localItems);
                 Refresh(false);
+            }
+            // Display recipe in a message box
+            else if (item.IsPotionRecipe)
+            {
+                DaggerfallMessageBox messageBoxRecipe = new DaggerfallMessageBox(uiManager, this);
+                messageBoxRecipe.SetTextTokens(item.GetMacroDataSource().PotionRecipeIngredients(TextFile.Formatting.JustifyCenter));
+                messageBoxRecipe.ClickAnywhereToClose = true;
+                messageBoxRecipe.Show();
             }
             // Equip apparel/weapon
             else
@@ -274,18 +282,26 @@ namespace ModernMenu
             // Info
             if (selectedActionMode == ActionModes.Info)
                 ShowInfoPopup(item);
-            // Use light source or book/parchment
-            else if (item.IsLightSource || item.IsParchment || item.IsPotionRecipe || item.ItemGroup == ItemGroups.Books)
-            {
-                UseItem(item);
-                Refresh(false);
-            }
-            // Use potion
-            else if (item.IsPotion)
+            // Use unequippable items
+            else if (item.IsLightSource || item.IsParchment || item.IsIngredient || item.IsPotion || item.ItemGroup == ItemGroups.Books ||
+                    (item.ItemGroup != ItemGroups.Weapons &&
+                        item.ItemGroup != ItemGroups.Armor &&
+                        item.ItemGroup != ItemGroups.MensClothing &&
+                        item.ItemGroup != ItemGroups.WomensClothing &&
+                        item.ItemGroup != ItemGroups.Jewellery &&
+                        !item.IsPotion && !item.IsPotionRecipe && !item.IsIngredient))
             {
                 if (!item.UseItem(remoteItems))
                     UseItem(item, remoteItems);
                 Refresh(false);
+            }
+            // Display recipe in a message box
+            else if (item.IsPotionRecipe)
+            {
+                DaggerfallMessageBox messageBoxRecipe = new DaggerfallMessageBox(uiManager, this);
+                messageBoxRecipe.SetTextTokens(item.GetMacroDataSource().PotionRecipeIngredients(TextFile.Formatting.JustifyCenter));
+                messageBoxRecipe.ClickAnywhereToClose = true;
+                messageBoxRecipe.Show();
             }
             // Equip apparel/weapon
             else
@@ -391,6 +407,7 @@ namespace ModernMenu
                         AddLocalItemModernMenu(item);
                 }
 
+                // Group items together by category and order them alphabetically
                 localItemsFiltered = localItemsFiltered.OrderBy(item => GetCategoryPrecedence(item)).ThenBy(item => item.LongName).ToList();
             }
         }
