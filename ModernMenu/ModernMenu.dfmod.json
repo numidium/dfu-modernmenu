@@ -1,10 +1,10 @@
 {
     "ModTitle": "Enhanced Inventory Menu",
-    "ModVersion": "0.1",
+    "ModVersion": "1.1",
     "ModAuthor": "numidium3rd",
     "ContactInfo": "",
-    "DFUnity_Version": "0.10.19",
-    "ModDescription": "Replaces the old inventory menu with one that should cater to more modern sensibilities.\n\nInstructions:\nThe default item action is \"Remove\" in the standard inventory menu and \"Select\" in the trade menu. Use the following modifier keys before clicking to perform actions.\n\nStandard Inventory Menu:\n(None) - Remove\nLeft Ctrl - Equip\nLeft Shift - Use\nLeft Alt - Info",
+    "DFUnity_Version": "0.10.21",
+    "ModDescription": "This mod streamlines the old inventory menu with context-sensitive click interactions. It also displays info on attack rolls when you equip weapons.\n\nInstructions:\n\n\nStandard Inventory Window:\nLeft Click - Remove\nRight Click - Equip or Use (changes clothing variant on paper doll)\nLeft Ctrl + Click - Info\n\nTrading Window:\nLeft Click - Select\nLeft Ctrl + Click - Info",
     "GUID": "72356c96-b5d4-4389-a140-ef011f44972e",
     "Files": [
         "Assets/Game/Mods/ModernMenu/Scripts/ModernMenu.cs",
