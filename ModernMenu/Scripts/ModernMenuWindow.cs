@@ -426,7 +426,6 @@ namespace ModernMenu
         {
             return new MultiFormatTextLabel
             {
-                Position = new Vector2(2, 0),
                 VerticalAlignment = VerticalAlignment.Middle,
                 MinTextureDimTextLabel = 16, // important to prevent scaling issues for single text lines
                 TextScale = .7f,
