@@ -416,10 +416,14 @@ namespace ModernMenu
                 item.ItemGroup == ItemGroups.WomensClothing ||
                 item.ItemGroup == ItemGroups.Jewellery)
                 return 2;
-            else if (item.IsPotion || item.IsPotionRecipe || item.IsIngredient)
+            else if (item.IsPotion)
                 return 3;
+            else if (item.IsPotionRecipe)
+                return 4;
+            else if (item.IsIngredient)
+                return 5;
 
-            return 4;
+            return 6;
         }
 
         protected MultiFormatTextLabel GetAttackInfoLabel()
@@ -463,10 +467,7 @@ namespace ModernMenu
                 }
 
                 // Apply weapon material modifier
-                if (weapon.GetWeaponMaterialModifier() > 0)
-                {
-                    chanceToHitMod += weapon.GetWeaponMaterialModifier() * 10;
-                }
+                chanceToHitMod += weapon.GetWeaponMaterialModifier() * 10;
 
                 // Apply racial bonuses
                 if (playerEntity.RaceTemplate.ID == (int)Races.DarkElf)
@@ -487,6 +488,20 @@ namespace ModernMenu
                     damageMod += playerEntity.Level / 3;
                     chanceToHitMod += playerEntity.Level / 3;
                 }
+
+                // Apply stat to-hit bonuses
+                chanceToHitMod += (playerEntity.Stats.LiveAgility + playerEntity.Stats.LiveLuck) / 10;
+
+                // Apply adrenaline rush
+                const int adrenalineRushModifier = 5;
+                const int improvedAdrenalineRushModifier = 8;
+                if (playerEntity.Career.AdrenalineRush && playerEntity.CurrentHealth < playerEntity.MaxHealth / 8)
+                {
+                    chanceToHitMod += (playerEntity.ImprovedAdrenalineRush) ? improvedAdrenalineRushModifier : adrenalineRushModifier;
+                }
+
+                // Apply enchantment modifier
+                chanceToHitMod += playerEntity.ChanceToHitModifier;
 
                 // Calculate min and max damage player can do with their current weapon
                 damageMod += weapon.GetWeaponMaterialModifier() + FormulaHelper.DamageModifier(playerEntity.Stats.LiveStrength);
