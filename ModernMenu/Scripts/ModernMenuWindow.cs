@@ -269,12 +269,12 @@ namespace ModernMenu
         protected void AccessoryItemsButton_OnMouseRightClick(BaseScreenComponent sender, Vector2 position)
         {
             // Use equipped accessory
-            DaggerfallUI.Instance.PlayOneShot(SoundClips.ButtonClick);
             var slot = (EquipSlots)sender.Tag;
             var item = playerEntity.ItemEquipTable.GetItem(slot);
             if (item == null)
                 return;
             UseItem(item);
+            DaggerfallUI.Instance.PlayOneShot(SoundClips.ButtonClick);
         }
 
         #endregion
@@ -568,6 +568,7 @@ namespace ModernMenu
                 else
                     EquipItem(item);
             }
+            DaggerfallUI.Instance.PlayOneShot(SoundClips.ButtonClick);
         }
 
         #endregion
