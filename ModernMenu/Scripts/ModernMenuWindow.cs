@@ -467,27 +467,12 @@ namespace ModernMenu
                 }
 
                 // Apply weapon material modifier
-                chanceToHitMod += weapon.GetWeaponMaterialModifier() * 10;
+                chanceToHitMod += FormulaHelper.CalculateWeaponToHit(weapon);
 
                 // Apply racial bonuses
-                if (playerEntity.RaceTemplate.ID == (int)Races.DarkElf)
-                {
-                    damageMod += playerEntity.Level / 4;
-                    chanceToHitMod += playerEntity.Level / 4;
-                }
-                else if (weaponSkill == (short)DFCareer.Skills.Archery)
-                {
-                    if (playerEntity.RaceTemplate.ID == (int)Races.WoodElf)
-                    {
-                        damageMod += playerEntity.Level / 3;
-                        chanceToHitMod += playerEntity.Level / 3;
-                    }
-                }
-                else if (playerEntity.RaceTemplate.ID == (int)Races.Redguard)
-                {
-                    damageMod += playerEntity.Level / 3;
-                    chanceToHitMod += playerEntity.Level / 3;
-                }
+                FormulaHelper.ToHitAndDamageMods racialMods = FormulaHelper.CalculateRacialModifiers(PlayerEntity, weapon, PlayerEntity);
+                damageMod += racialMods.damageMod;
+                chanceToHitMod += racialMods.toHitMod;
 
                 // Apply stat to-hit bonuses
                 chanceToHitMod += (playerEntity.Stats.LiveAgility + playerEntity.Stats.LiveLuck) / 10;
