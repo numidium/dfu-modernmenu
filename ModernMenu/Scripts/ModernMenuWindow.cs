@@ -40,12 +40,6 @@ namespace ModernMenu
 
         #endregion
 
-        #region Constants
-
-        const int releaseTimeout = 10;
-
-        #endregion
-
         #region Screen Components
 
         Rect allRect = new Rect(0, 0, 53, 10);

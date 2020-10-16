@@ -89,7 +89,12 @@ namespace ModernMenu
 
         #region Public methods
 
-        public ModernMenuTradeWindow(IUserInterfaceManager uiManager, DaggerfallBaseWindow previous = null, WindowModes windowMode = WindowModes.Sell, IGuild guild = null)
+        public ModernMenuTradeWindow(IUserInterfaceManager uiManager, DaggerfallBaseWindow previous = null)
+            : this(uiManager, previous, WindowModes.Sell, null)
+        {
+        }
+
+        public ModernMenuTradeWindow(IUserInterfaceManager uiManager, DaggerfallBaseWindow previous, WindowModes windowMode, IGuild guild)
             : base(uiManager, previous, windowMode, guild)
         {
         }
